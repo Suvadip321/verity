@@ -337,15 +337,17 @@ verity/
    ```sql
    CREATE EXTENSION IF NOT EXISTS vector;
    ```
-3. Get your connection string: **Settings → Database → Connection string → URI → Transaction mode (port 6543)**
+3. Get your connection string: Click **Connect** (green button, top bar) → **Direct** tab → **Session pooler** → Type: **URI** → copy the connection string
+   > ⚠️ **Why Session pooler, not Transaction pooler?** `asyncpg` (our async driver) uses prepared statements by default, which Transaction pooling does not support — you'd get `prepared statement does not exist` errors. Session pooler also works correctly with Alembic migrations. Transaction pooler is designed for serverless/short-lived functions, not long-running servers like FastAPI.
 4. Add to `.env`:
    ```
-   DATABASE_URL=postgresql+asyncpg://postgres.[ref]:[pw]@aws-0-[region].pooler.supabase.com:6543/postgres
+   DATABASE_URL=postgresql+asyncpg://postgres.[ref]:[pw]@aws-1-[region].pooler.supabase.com:5432/postgres
    SUPABASE_URL=https://[ref].supabase.co
-   SUPABASE_ANON_KEY=...your anon key (Dashboard → Settings → API)...
-   SUPABASE_SERVICE_ROLE_KEY=...your service role key...
+   SUPABASE_ANON_KEY=...your anon key (Dashboard → Settings → API Keys → Legacy tab)...
+   SUPABASE_SERVICE_ROLE_KEY=...your service role key (same page, click Reveal)...
    ```
    > ⚠️ The **service role key** bypasses Row Level Security — backend only. Never expose it to the frontend.
+   > ⚠️ Use the **Legacy anon, service_role API keys** tab (not the new Publishable/Secret keys) — the Supabase Python and JS SDKs expect the legacy JWT format (`eyJ...`).
 5. Create `app/core/config.py` — a `pydantic-settings` class that loads all `.env` variables into typed Python attributes
 6. Create `app/database/connection.py`:
    ```python
