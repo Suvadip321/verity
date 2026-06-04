@@ -4,10 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import get_db
 from app.api.auth import router as auth_router
+from app.api.sessions import router as sessions_router
 
 app = FastAPI(title="Verity API")
 
 app.include_router(auth_router)
+app.include_router(sessions_router)
 
 
 @app.get("/health")

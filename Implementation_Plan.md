@@ -422,36 +422,49 @@ verity/
 
 ---
 
-#### Day 4 — Research Session Models & Routes
+#### ✅ Day 4 — Research Session Models & Routes
 
-**Goal:** Users can create and list research sessions in the database.
+**Goal:** Build the core database foundation. Whenever a user types a topic to research, we need a secure, reliable place to store that task and all of its intermediate steps.
+
+**Why this matters:**
+Right now, the app can authenticate users, but they have nothing they can actually *do*. We need a place to permanently store the results of the AI's hard work (the generated questions, the web sources it finds, and the final report) so users can view their history later.
 
 **Steps:**
 
-1. Create `app/models/session.py` — SQLAlchemy models:
-   - `ResearchSession` — all columns from the table definition above
-   - `ResearchQuestion` — id, session_id, question, created_at
-   - `ResearchSource` — id, session_id, title, source_url, relevance_score, credibility_score, usefulness_score, extracted_text, summary
-2. Generate and run the migration:
+1. **Create the Database Models (SQLAlchemy)**
+   Create `app/models/session.py` and define three classes that represent our Postgres tables:
+   - `ResearchSession`: The main folder holding `user_id` (linked to Auth), `topic`, `status`, `current_step`, `report_markdown`.
+   - `ResearchQuestion`: The 3 generated questions. It will have a `session_id` foreign key.
+   - `ResearchSource`: The scraped websites. Includes fields for `title`, `source_url`, `relevance_score`, `extracted_text`, and `summary`. It also has a `session_id` foreign key.
+
+2. **Generate and run the migration (Alembic)**
+   Run the terminal commands to translate those Python classes into real SQL tables in Supabase:
    ```bash
    alembic revision --autogenerate -m "add session tables"
    alembic upgrade head
    ```
-3. Enable Row Level Security on `research_sessions` in Supabase SQL Editor:
+
+3. **Enable Row Level Security (RLS)**
+   Run this SQL script in the Supabase SQL Editor to guarantee User A can never see User B's sessions:
    ```sql
    ALTER TABLE research_sessions ENABLE ROW LEVEL SECURITY;
    CREATE POLICY "Users see own sessions"
      ON research_sessions FOR ALL
      USING (auth.uid() = user_id);
    ```
-   This means even if you forget to filter by `user_id` in your Python code, the database refuses to return other users' rows.
-4. Create `app/schemas/session.py` — Pydantic shapes for create/list/detail
-5. Create `app/api/sessions.py`:
-   - `POST /sessions` — creates session with `status = "pending"`, sets `user_id` from JWT
-   - `GET /sessions` — returns sessions for logged-in user
-   - `GET /sessions/{id}` — returns one session; 404 if not found or belongs to another user
 
-✅ **Done when:** You can create and list sessions via Postman. User B cannot see User A's sessions.
+4. **Create Data Schemas (Pydantic)**
+   Create `app/schemas/session.py` to define the API shapes:
+   - `SessionCreate`: Expects just a `topic` string.
+   - `SessionResponse`: Defines the shape of the data returned to the user.
+
+5. **Build the API Routes (FastAPI)**
+   Create `app/api/sessions.py` to expose three endpoints (protected by `get_current_user`):
+   - `POST /sessions` — creates a new session with `status = "pending"`
+   - `GET /sessions` — returns all sessions for the logged-in user
+   - `GET /sessions/{id}` — returns details of one specific session
+
+✅ **Done when:** You can create and list sessions via Swagger UI, and you can physically see the rows appearing in your Supabase Dashboard Table Editor. User B cannot see User A's sessions.
 
 ---
 
