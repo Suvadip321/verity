@@ -3,8 +3,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import get_db
+from app.api.auth import router as auth_router
 
 app = FastAPI(title="Verity API")
+
+app.include_router(auth_router)
 
 
 @app.get("/health")
@@ -23,3 +26,4 @@ async def db_health(db: AsyncSession = Depends(get_db)):
     pgvector_enabled = result.scalar()
 
     return {"status": "connected", "pgvector": pgvector_enabled}
+

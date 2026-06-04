@@ -271,7 +271,7 @@ verity/
 
 ---
 
-#### Day 1 — Project Setup & Environment
+#### ✅ Day 1 — Project Setup & Environment
 
 **Goal:** Your machine is fully set up and a basic FastAPI server is running.
 
@@ -324,7 +324,7 @@ verity/
 
 ---
 
-#### Day 2 — Supabase Setup & Database Connection
+#### ✅ Day 2 — Supabase Setup & Database Connection
 
 **Goal:** Python app connects to Supabase. pgvector is enabled.
 
@@ -368,7 +368,7 @@ verity/
 
 ---
 
-#### Day 3 — Authentication: Email/Password + OAuth Setup
+#### ✅ Day 3 — Authentication: Email/Password + OAuth + Mobile Setup
 
 **Goal:** Users can sign up, log in with email/password, and the OAuth providers (Google + GitHub) are configured in Supabase ready for the frontend.
 
@@ -411,16 +411,14 @@ verity/
 - Copy **Client ID** and **Client Secret**
 - In Supabase Dashboard → Authentication → Providers → Google → paste them in → Enable
 
-*GitHub OAuth:*
-- Go to GitHub → Settings → Developer Settings → OAuth Apps → New OAuth App
-- Homepage URL: `http://localhost:3000` (update to Vercel URL after deployment)
-- Authorization callback URL: `https://[ref].supabase.co/auth/v1/callback`
-- Copy **Client ID** and **Client Secret**
-- In Supabase Dashboard → Authentication → Providers → GitHub → paste them in → Enable
+*Mobile (SMS OTP):*
+- Create an account with an SMS provider (like Twilio, MessageBird, or Textmagic)
+- Get your API keys / Auth tokens from the provider
+- In Supabase Dashboard → Authentication → Providers → Phone → select your provider, paste keys → Enable
 
-> Both OAuth providers redirect to Supabase's callback URL (not yours). Supabase handles the token exchange and then redirects to your frontend. You only need to handle the final redirect on the frontend (Day 15).
+> Google OAuth redirects to Supabase's callback URL, and Mobile SMS sends a 6-digit code. Supabase handles the token exchange for both!
 
-✅ **Done when:** Email signup/login/`/auth/me` work in Postman. Google and GitHub OAuth are enabled in Supabase Dashboard (green checkmark).
+✅ **Done when:** Email signup/login/`/auth/me` work in Swagger UI. Google and Mobile (Phone) are enabled in Supabase Dashboard.
 
 ---
 
