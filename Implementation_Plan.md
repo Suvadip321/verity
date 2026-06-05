@@ -5,31 +5,6 @@
 
 ---
 
-## Before You Start — Understanding the Big Ideas
-
-Read this once before Day 1. These concepts underpin every decision in this project.
-
-### What is an "Agentic Workflow"?
-A normal chatbot takes your message → calls AI → replies. That's one step.
-
-An *agentic workflow* is a chain of steps where each step does one job and passes results forward — like an assembly line. Verity has 8 steps: plan → search → evaluate → extract → summarise → check → embed → report. If there isn't enough information after searching, it loops back and tries again automatically. That self-correcting loop is what makes it "agentic."
-
-### What is RAG (Retrieval-Augmented Generation)?
-When you ask an AI a question, it answers from memory (training data). Problem: it can hallucinate facts.
-
-RAG fixes this. Instead of answering from memory, you first *retrieve* the most relevant chunks of your own researched text, then pass those to the AI as context. The AI answers only from what you gave it — no hallucination, grounded in your actual research.
-
-### What is a Vector / Embedding?
-Text can be converted into a list of numbers (a "vector" or "embedding") that captures its *meaning*. Two sentences that mean similar things will have similar vectors — even if they use completely different words. pgvector is a PostgreSQL extension that stores these vectors and lets you search for the most semantically similar ones instantly. This is how Verity finds the right chunks to answer your question.
-
-### What is LangGraph?
-LangGraph is a Python library that lets you define a workflow as a graph — nodes (steps) connected by edges (what runs next). It handles the conditional retry loop, state passing between nodes, and integrates with LangSmith for full observability. Think of it as the "director" of your assembly line.
-
-### What is OAuth?
-OAuth lets users log in using an existing account (Google, GitHub) rather than creating a new username/password. Instead of you handling passwords, you delegate to a trusted provider. The flow: user clicks "Login with Google" → Google authenticates them → redirects back to your app with a token → Supabase validates that token and creates or retrieves the user. You write almost no code — Supabase handles the whole flow.
-
----
-
 ## Tech Stack — All Free
 
 ### Backend (Python)
@@ -48,15 +23,15 @@ OAuth lets users log in using an existing account (Google, GitHub) rather than c
 
 | Tool | What It Does | Free Tier |
 |------|-------------|-----------|
-| **`gemini-2.5-flash`** | Main LLM — questions, scoring, summaries, reports | 1,500 req/day free via Google AI Studio |
-| **`gemini-embedding-001`** | Converts text to 3072-dim vectors for RAG | Free — same Google API key |
+| **`mistral-small-latest`** | Main LLM — questions, scoring, summaries, reports | Free via Mistral API |
+| **`mistral-embed`** | Converts text to 1024-dim vectors for RAG | Free via Mistral API |
 | **LangGraph** | Builds the agentic workflow graph | Open source |
-| **`google-genai` SDK** | Official Google Python SDK for Gemini | Open source; replaces old `langchain-google-genai` |
+| **`langchain-mistralai`** | Official LangChain integration for Mistral | Open source |
 | **Tavily API** | Web search built for AI agents | 1,000 searches/month free |
 | **LangSmith** | Traces every LLM call — essential for debugging and demos | Free developer tier |
 | **BeautifulSoup4 + httpx** | Downloads and cleans webpages | Open source |
 
-> ⚠️ **Model notes:** `text-embedding-004` was shut down January 14, 2026 — always use `gemini-embedding-001`. `gemini-2.5-flash` is the stable free-tier LLM as of 2026; `gemini-2.0-flash` is deprecated and shuts down June 1, 2026.
+> ⚠️ **Model notes:** We transitioned from Gemini to Mistral to avoid rate limits. `mistral-small-latest` handles all text generation and `mistral-embed` outputs robust 1024-dimensional vectors for similarity search.
 
 ### Frontend (Next.js)
 
@@ -114,21 +89,21 @@ Supabase replaces what would normally take you a week to build separately:
 ```
 User types topic
       ↓
-[planner_node]       → Asks Gemini to generate 3 research questions
+[planner_node]       → Asks Mistral to generate 3 research questions
       ↓
 [search_node]        → Calls Tavily to search the web for each question
       ↓
-[evaluator_node]     → Asks Gemini to score each result (relevance/credibility/usefulness 1–5), keeps top 5
+[evaluator_node]     → Asks Mistral to score each result (relevance/credibility/usefulness 1–5), keeps top 5
       ↓
 [extraction_node]    → Downloads each source URL, strips HTML with BeautifulSoup, saves clean text
       ↓
-[summarization_node] → Asks Gemini to summarise each source in 2–3 paragraphs
+[summarization_node] → Asks Mistral to summarise each source in 2–3 paragraphs
       ↓
 [sufficiency_node]   → Asks: "Is there enough info for a full report?" If NO and first attempt → loop back to search
       ↓
-[embedding_node]     → Splits text into 800-token chunks, embeds each with gemini-embedding-001, saves to pgvector
+[embedding_node]     → Splits text into chunks, embeds each with mistral-embed, saves to pgvector
       ↓
-[report_node]        → Feeds all summaries to Gemini, generates a full markdown report
+[report_node]        → Feeds all summaries to Mistral, generates a full markdown report
 ```
 
 ### Session Status Flow
@@ -144,13 +119,13 @@ summarizing → checking_sufficiency → embedding → generating_report → com
 ```
 User types a question
       ↓
-Backend converts question to a vector using gemini-embedding-001
+Backend converts question to a vector using mistral-embed
       ↓
 pgvector finds the 5 most similar chunks from YOUR research (filtered by session_id)
       ↓
 Backend builds prompt: "Answer ONLY using this context: [5 chunks]. Question: [question]"
       ↓
-Gemini answers — grounded in your research, no hallucination
+Mistral answers — grounded in your research, no hallucination
       ↓
 Both messages saved to DB — history persists across sessions
 ```
@@ -196,7 +171,7 @@ Six tables. Each one is a spreadsheet where each row is one piece of data.
 
 **`research_sources`** — evaluated web sources with relevance/credibility/usefulness scores (1–5 each) and extracted + summarised text
 
-**`document_chunks`** — the RAG table. Each row is one ~800-token chunk with a `vector(3072)` embedding column (using `gemini-embedding-001`'s default output size, or truncated to 768 for storage efficiency)
+**`document_chunks`** — the RAG table. Each row is one ~750-token chunk with a `vector(1024)` embedding column (using `mistral-embed` output size)
 
 **`chat_messages`** — every user/assistant message, tied to a session
 
@@ -468,7 +443,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 5 — Planner + Search Services
+#### ✅ Day 5 — Planner + Search Services
 
 **Goal:** Gemini generates research questions. Tavily searches the web.
 
@@ -507,7 +482,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 6 — Evaluator, Extraction & Summarisation Services
+#### ✅ Day 6 — Evaluator, Extraction & Summarisation Services
 
 **Goal:** AI scores sources. Webpages are downloaded and cleaned. Each source is summarised.
 
@@ -541,7 +516,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 7 — Sufficiency, Embedding, Report & Chat Services
+#### ✅ Day 7 — Sufficiency, Embedding, Report & Chat Services
 
 **Goal:** All core AI services are working end-to-end.
 
@@ -584,7 +559,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 8 — Chat & Document Chunk Models + pgvector Migration
+#### ✅ Day 8 — Chat & Document Chunk Models + pgvector Migration
 
 **Goal:** The database has the pgvector table ready for RAG.
 
@@ -614,7 +589,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 9 — LangGraph: State & Nodes
+#### ✅ Day 9 — LangGraph: State & Nodes
 
 **Goal:** The graph skeleton exists — all 8 nodes are defined.
 
@@ -666,7 +641,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 10 — LangGraph: Graph Assembly & Run Endpoint
+#### ✅ Day 10 — LangGraph: Graph Assembly & Run Endpoint
 
 **Goal:** `POST /sessions/{id}/run` triggers the full 8-node pipeline in the background.
 
@@ -728,7 +703,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 11 — LangSmith Setup & Workflow Debugging
+#### ✅ Day 11 — LangSmith Setup & Workflow Debugging
 
 **Goal:** Every LLM call is visible in LangSmith. Three different topics run successfully end-to-end.
 
@@ -757,7 +732,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 12 — RAG Chat Backend
+#### ✅ Day 12 — RAG Chat Backend
 
 **Goal:** Users can ask questions about their research and get grounded, non-hallucinated answers.
 
@@ -797,7 +772,38 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 13 — Supabase Realtime Setup
+#### ✅ Day 13 — Backend Polish, Error Handling & Full API Testing
+
+**Goal:** Every endpoint is tested. No session can ever get permanently stuck.
+
+**Steps:**
+
+1. Go through every route in Postman — test the happy path AND error cases
+2. Add error handling in every node: if a service throws, catch it, set `status = "failed"`, save `error_message`
+3. Add ownership validation: if a session belongs to a different user, return `403 Forbidden`
+4. Add CORS to `main.py`:
+   ```python
+   from fastapi.middleware.cors import CORSMiddleware
+   app.add_middleware(
+       CORSMiddleware,
+       allow_origins=["http://localhost:3000"],  # add Vercel URL after deployment
+       allow_credentials=True,
+       allow_methods=["*"],
+       allow_headers=["*"]
+   )
+   ```
+5. Test these failure scenarios — confirm `status` is always updated:
+   - Tavily search fails → continue with partial results
+   - Webpage can't be scraped → skip it, don't crash
+   - Mistral returns invalid JSON → retry once with stricter prompt
+   - Embedding API fails → set `failed`, save error
+6. Write `test_services.py` that calls each service with a real topic and prints results
+
+✅ **Done when:** All endpoints return correct responses. No session can get stuck in a non-terminal state forever.
+
+---
+
+#### Day 14 — Supabase Realtime Setup
 
 **Goal:** The frontend receives live workflow step updates without any SSE endpoint or polling.
 
@@ -832,37 +838,6 @@ Right now, the app can authenticate users, but they have nothing they can actual
 4. Verify: open the **Supabase Realtime Inspector** in the dashboard and trigger a workflow — you should see `UPDATE` events appearing live as each node runs
 
 ✅ **Done when:** Supabase Realtime Inspector shows live UPDATE events for each step as the workflow progresses.
-
----
-
-#### Day 14 — Backend Polish, Error Handling & Full API Testing
-
-**Goal:** Every endpoint is tested. No session can ever get permanently stuck.
-
-**Steps:**
-
-1. Go through every route in Postman — test the happy path AND error cases
-2. Add error handling in every node: if a service throws, catch it, set `status = "failed"`, save `error_message`
-3. Add ownership validation: if a session belongs to a different user, return `403 Forbidden`
-4. Add CORS to `main.py`:
-   ```python
-   from fastapi.middleware.cors import CORSMiddleware
-   app.add_middleware(
-       CORSMiddleware,
-       allow_origins=["http://localhost:3000"],  # add Vercel URL after deployment
-       allow_credentials=True,
-       allow_methods=["*"],
-       allow_headers=["*"]
-   )
-   ```
-5. Test these failure scenarios — confirm `status` is always updated:
-   - Tavily search fails → continue with partial results
-   - Webpage can't be scraped → skip it, don't crash
-   - Gemini returns invalid JSON → retry once with stricter prompt
-   - Embedding API fails → set `failed`, save error
-6. Write `test_services.py` that calls each service with a real topic and prints results
-
-✅ **Done when:** All endpoints return correct responses. No session can get stuck in a non-terminal state forever.
 
 ---
 

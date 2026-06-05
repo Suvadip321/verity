@@ -1,7 +1,12 @@
-from datetime import datetime
-from typing import List, Optional
+from __future__ import annotations
 
-from sqlalchemy import Integer, String, Text, ForeignKey, DateTime
+from datetime import datetime
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.chat import ChatMessage, DocumentChunk
+
+from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from app.models.base import Base
@@ -10,7 +15,7 @@ class ResearchSession(Base):
     __tablename__ = "research_sessions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[str] = mapped_column(String, index=True) # UUID string linked to auth.users
+    user_id: Mapped[str] = mapped_column(Uuid(as_uuid=False), index=True) # UUID linked to auth.users
     topic: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String, default="pending")
     current_step: Mapped[str] = mapped_column(String, default="pending")
@@ -18,9 +23,10 @@ class ResearchSession(Base):
     error_message: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     questions: Mapped[List["ResearchQuestion"]] = relationship("ResearchQuestion", back_populates="session", cascade="all, delete-orphan")
     sources: Mapped[List["ResearchSource"]] = relationship("ResearchSource", back_populates="session", cascade="all, delete-orphan")
+    messages: Mapped[List["ChatMessage"]] = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+    chunks: Mapped[List["DocumentChunk"]] = relationship("DocumentChunk", back_populates="session", cascade="all, delete-orphan")
 
 
 class ResearchQuestion(Base):
@@ -31,7 +37,6 @@ class ResearchQuestion(Base):
     question: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     session: Mapped["ResearchSession"] = relationship("ResearchSession", back_populates="questions")
 
 
@@ -49,5 +54,4 @@ class ResearchSource(Base):
     summary: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     session: Mapped["ResearchSession"] = relationship("ResearchSession", back_populates="sources")

@@ -8,8 +8,9 @@ from alembic import context
 from app.core.config import settings
 from app.models.base import Base
 
-# Import model modules here as they are added so autogenerate can see them.
+
 import app.models.session
+import app.models.chat
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

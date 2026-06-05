@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-# Research Question Schemas
 class ResearchQuestionBase(BaseModel):
     question: str
 
@@ -13,7 +12,6 @@ class ResearchQuestionResponse(ResearchQuestionBase):
     class Config:
         from_attributes = True
 
-# Research Source Schemas
 class ResearchSourceBase(BaseModel):
     title: str
     source_url: str
@@ -30,7 +28,6 @@ class ResearchSourceResponse(ResearchSourceBase):
     class Config:
         from_attributes = True
 
-# Research Session Schemas
 class SessionCreate(BaseModel):
     topic: str
 
