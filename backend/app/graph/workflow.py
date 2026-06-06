@@ -1,6 +1,5 @@
-"""LangGraph workflow assembly — builds and compiles the 8-node research pipeline."""
+"""LangGraph workflow — builds and compiles the 8-node research pipeline."""
 
-import asyncio
 import traceback
 
 from sqlalchemy import update
@@ -20,11 +19,11 @@ from app.graph.nodes import (
 )
 from app.models.session import ResearchSession
 
+MAX_RETRIES = 1
 
 
 def _should_retry(state: ResearchState) -> str:
-    """Conditional edge after sufficiency_node: retry search once if not enough info."""
-    if not state["enough_information"] and state["retry_count"] <= 1:
+    if not state["enough_information"] and state["retry_count"] <= MAX_RETRIES:
         return "search"
     return "embedding"
 
@@ -67,14 +66,8 @@ def build_workflow():
 graph = build_workflow()
 
 
-
 async def run_workflow(session_id: int, topic: str) -> None:
-    """
-    Invoke the full research pipeline for a session.
-
-    Runs as a background task (fire-and-forget via asyncio.create_task).
-    On any failure, sets session status to 'failed' and saves the error message.
-    """
+    """Run the research pipeline. Called as a FastAPI BackgroundTask."""
     initial_state: ResearchState = {
         "session_id": session_id,
         "topic": topic,
@@ -91,7 +84,12 @@ async def run_workflow(session_id: int, topic: str) -> None:
 
     try:
         await graph.ainvoke(initial_state)
-    except Exception:
+    except Exception as e:
+        from sqlalchemy.exc import IntegrityError
+        if isinstance(e, IntegrityError):
+            print(f"[workflow] Session {session_id} was deleted during execution. Halting gracefully.")
+            return
+            
         error = traceback.format_exc()
         print(f"[workflow] Session {session_id} failed:\n{error}")
         async with async_session() as db:

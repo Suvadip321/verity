@@ -1,16 +1,9 @@
 """Summarises extracted source text using Mistral."""
 
-from langchain_mistralai import ChatMistralAI
+from app.core.llm import llm
 
-from app.core.config import settings
+_MAX_INPUT_CHARS = 12_000
 
-llm = ChatMistralAI(
-    model="mistral-small-latest",
-    api_key=settings.MISTRAL_API_KEY,
-    max_retries=3,
-)
-
-_MAX_INPUT_CHARS = 12000
 
 async def summarise_text(text: str, topic: str) -> str:
     """Return a 2–3 paragraph summary of *text* focused on *topic*."""

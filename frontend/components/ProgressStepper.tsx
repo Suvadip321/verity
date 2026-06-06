@@ -1,0 +1,87 @@
+'use client'
+
+import React from 'react'
+const STEPS = [
+  { key: 'pending', label: 'Waiting to Start' },
+  { key: 'planning', label: 'Generating Research Questions' },
+  { key: 'searching', label: 'Searching the Web' },
+  { key: 'evaluating_sources', label: 'Evaluating Sources' },
+  { key: 'extracting', label: 'Reading Webpages' },
+  { key: 'summarizing', label: 'Summarising Content' },
+  { key: 'checking_sufficiency', label: 'Checking Information Coverage' },
+  { key: 'embedding', label: 'Building Knowledge Base' },
+  { key: 'generating_report', label: 'Writing Report' },
+  { key: 'completed', label: 'Done' },
+]
+
+interface ProgressStepperProps {
+  currentStep: string | null;
+  status: string;
+}
+
+export function ProgressStepper({ currentStep, status }: ProgressStepperProps) {
+  // Find index of current step. If currentStep is null, we assume we are at the beginning or completed.
+  const currentIndex = currentStep 
+    ? STEPS.findIndex(s => s.key === currentStep)
+    : status === 'completed' ? STEPS.length : 0
+
+  return (
+    <div className="flex flex-col space-y-6 max-w-xl mx-auto my-12 p-8 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg relative overflow-hidden">
+      <h3 className="text-xl font-semibold text-zinc-100 mb-4 relative z-10">Research Progress</h3>
+      
+      <div className="space-y-6 relative z-10">
+        {/* Vertical line connecting steps */}
+        <div className="absolute left-[15px] top-4 bottom-4 w-[2px] bg-zinc-800 -z-10"></div>
+        
+        {STEPS.map((step, idx) => {
+          const isPast = status === 'completed' || (currentIndex > idx)
+          const isCurrent = status !== 'completed' && status !== 'failed' && currentIndex === idx
+          const isFuture = status !== 'completed' && currentIndex < idx
+          
+          return (
+            <div key={step.key} className={`flex items-center gap-5 transition-all duration-500 ${isFuture ? 'opacity-40' : 'opacity-100'}`}>
+              
+              {/* Icon Container */}
+              <div className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                {isPast && (
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                
+                {isCurrent && (
+                  <div className="relative flex items-center justify-center w-8 h-8">
+                    <div className="absolute inset-0 rounded-full border-2 border-zinc-700"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  </div>
+                )}
+                
+                {(status === 'failed' && currentIndex === idx) && (
+                  <div className="w-8 h-8 rounded-full bg-zinc-800 border border-red-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  </div>
+                )}
+                
+                {isFuture && (
+                  <div className="w-8 h-8 rounded-full bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Text */}
+              <div className="flex-1">
+                <span className={`text-base font-medium transition-colors duration-300 ${isCurrent ? 'text-blue-400' : isPast ? 'text-zinc-200' : 'text-zinc-500'}`}>
+                  {step.label}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

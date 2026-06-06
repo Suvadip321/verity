@@ -1,14 +1,7 @@
 """Generates the final markdown research report using Mistral."""
 
-from langchain_mistralai import ChatMistralAI
+from app.core.llm import llm
 
-from app.core.config import settings
-
-llm = ChatMistralAI(
-    model="mistral-small-latest",
-    api_key=settings.MISTRAL_API_KEY,
-    max_retries=3,
-)
 
 async def generate_report(
     topic: str,

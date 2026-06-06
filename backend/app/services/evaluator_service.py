@@ -1,18 +1,12 @@
 """Scores search results using Mistral structured output and returns the top 5."""
 
 from dataclasses import dataclass
+
 from pydantic import BaseModel
 
-from langchain_mistralai import ChatMistralAI
-
-from app.core.config import settings
+from app.core.llm import llm
 from app.services.search_service import SearchResult
 
-llm = ChatMistralAI(
-    model="mistral-small-latest",
-    api_key=settings.MISTRAL_API_KEY,
-    max_retries=3,
-)
 
 @dataclass
 class ScoredSource:
@@ -28,14 +22,17 @@ class ScoredSource:
     def total_score(self) -> int:
         return self.relevance_score + self.credibility_score + self.usefulness_score
 
+
 class _SourceScore(BaseModel):
     url: str
     relevance_score: int
     credibility_score: int
     usefulness_score: int
 
+
 class _ScoreList(BaseModel):
     scores: list[_SourceScore]
+
 
 async def evaluate_sources(results: list[SearchResult], topic: str) -> list[ScoredSource]:
     """Score each search result with Mistral and return the top 5 by total score."""

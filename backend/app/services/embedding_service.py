@@ -15,41 +15,31 @@ embeddings_client = MistralAIEmbeddings(
 
 _CHUNK_SIZE = 3000
 _OVERLAP = 200
+_RATE_LIMIT_SLEEP = 1.0  # seconds between embed calls (Mistral free tier limit)
 
-
-def _split_into_chunks(text: str) -> list[str]:
-    """Split text into chunks using LangChain's RecursiveCharacterTextSplitter."""
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=_CHUNK_SIZE,
-        chunk_overlap=_OVERLAP,
-    )
-    return splitter.split_text(text)
+_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=_CHUNK_SIZE,
+    chunk_overlap=_OVERLAP,
+)
 
 
 async def embed_text(text: str) -> list[float]:
-    """Return a 1024-dimensional embedding vector for a single text string."""
-    vector = await embeddings_client.aembed_query(text)
-    return vector
+    """Return an embedding vector for a single text string."""
+    return await embeddings_client.aembed_query(text)
 
 
 async def embed_chunks(text: str) -> list[tuple[str, list[float]]]:
-    """
-    Split text into chunks and embed each one.
+    """Split text into chunks and return (chunk, vector) pairs."""
+    chunks = [c for c in _splitter.split_text(text) if c.strip()]
+    if not chunks:
+        return []
 
-    Returns a list of (chunk_text, embedding_vector) tuples,
-    ready to be saved to the document_chunks table.
-    """
-    chunks = _split_into_chunks(text)
-    results: list[tuple[str, list[float]]] = []
-
-    for chunk in chunks:
-        if not chunk.strip():
-            continue
-        try:
-            vector = await embed_text(chunk)
-            results.append((chunk, vector))
-            await asyncio.sleep(1)
-        except Exception as exc:
-            print(f"[embedding_service] Failed to embed chunk: {exc}")
-
-    return results
+    try:
+        vectors = []
+        for chunk in chunks:
+            vectors.append(await embeddings_client.aembed_query(chunk))
+            await asyncio.sleep(_RATE_LIMIT_SLEEP)
+        return list(zip(chunks, vectors))
+    except Exception as exc:
+        print(f"[embedding_service] Failed to embed chunks: {exc}")
+        return []

@@ -6,11 +6,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.connection import get_db
+from contextlib import asynccontextmanager
+
+from app.database.connection import get_db, engine
 from app.api.auth import router as auth_router
 from app.api.sessions import router as sessions_router
 
-app = FastAPI(title="Verity API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    yield
+    # Shutdown: gracefully close all DB connections so we don't leave zombies
+    # on Supabase's pooler during Uvicorn reloads.
+    await engine.dispose()
+
+
+app = FastAPI(title="Verity API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,20 +1,18 @@
-import asyncio
-from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.core.dependencies import get_current_user
 from app.database.connection import get_db
+from app.models.chat import ChatMessage
 from app.models.session import ResearchSession
 from app.schemas.chat import ChatRequest, ChatResponse, ChatMessageResponse
-from app.schemas.session import SessionCreate, SessionResponse
+from app.schemas.session import SessionCreate, SessionResponse, SessionListResponse, SessionUpdate
 from app.services.chat_service import chat, get_messages
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
-
 
 
 async def _get_session_or_404(session_id: int, user_id: str, db: AsyncSession) -> ResearchSession:
@@ -30,7 +28,6 @@ async def _get_session_or_404(session_id: int, user_id: str, db: AsyncSession) -
     return session
 
 
-
 @router.post("", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_session(
     request: SessionCreate,
@@ -44,18 +41,16 @@ async def create_session(
         current_step="pending",
     )
     db.add(new_session)
-    await db.flush()
     await db.commit()
-
-    result = await db.execute(
-        select(ResearchSession)
-        .where(ResearchSession.id == new_session.id)
-        .options(selectinload(ResearchSession.questions), selectinload(ResearchSession.sources))
-    )
-    return result.scalars().first()
+    await db.refresh(new_session)
+    # Load relationships needed by SessionResponse
+    await db.refresh(new_session, attribute_names=["questions", "sources"])
+    return new_session
 
 
-@router.get("", response_model=List[SessionResponse])
+from sqlalchemy.orm import defer
+
+@router.get("", response_model=list[SessionListResponse])
 async def list_sessions(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -63,7 +58,7 @@ async def list_sessions(
     result = await db.execute(
         select(ResearchSession)
         .where(ResearchSession.user_id == user.id)
-        .options(selectinload(ResearchSession.questions), selectinload(ResearchSession.sources))
+        .options(defer(ResearchSession.report_markdown))
         .order_by(ResearchSession.created_at.desc())
     )
     return result.scalars().all()
@@ -78,10 +73,37 @@ async def get_session(
     return await _get_session_or_404(session_id, user.id, db)
 
 
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(
+    session_id: int,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    session = await _get_session_or_404(session_id, user.id, db)
+    await db.delete(session)
+    await db.commit()
+    return None
 
-@router.post("/{session_id}/run")
+
+@router.patch("/{session_id}", response_model=SessionResponse)
+async def update_session(
+    session_id: int,
+    session_in: SessionUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    session = await _get_session_or_404(session_id, user.id, db)
+    session.topic = session_in.topic
+    await db.commit()
+    await db.refresh(session)
+    await db.refresh(session, attribute_names=["questions", "sources"])
+    return session
+
+
+@router.post("/{session_id}/run", status_code=status.HTTP_202_ACCEPTED)
 async def run_session(
     session_id: int,
+    background_tasks: BackgroundTasks,
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -93,12 +115,10 @@ async def run_session(
             detail=f"Session is already '{session.status}'. Only pending or failed sessions can be run.",
         )
 
-    # Import here to avoid circular imports at module load time
     from app.graph.workflow import run_workflow
-    asyncio.create_task(run_workflow(session_id, session.topic))
+    background_tasks.add_task(run_workflow, session_id, session.topic)
 
     return {"status": "started"}
-
 
 
 @router.post("/{session_id}/chat", response_model=ChatResponse)
@@ -113,7 +133,19 @@ async def chat_with_session(
     return ChatResponse(answer=answer)
 
 
-@router.get("/{session_id}/messages", response_model=List[ChatMessageResponse])
+@router.delete("/{session_id}/chat")
+async def clear_session_chat(
+    session_id: int,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_session_or_404(session_id, user.id, db)
+    await db.execute(delete(ChatMessage).where(ChatMessage.session_id == session_id))
+    await db.commit()
+    return {"status": "success"}
+
+
+@router.get("/{session_id}/messages", response_model=list[ChatMessageResponse])
 async def get_session_messages(
     session_id: int,
     user=Depends(get_current_user),
@@ -122,7 +154,6 @@ async def get_session_messages(
     await _get_session_or_404(session_id, user.id, db)
     messages = await get_messages(session_id, db)
     return messages
-
 
 
 @router.get("/{session_id}/sources")

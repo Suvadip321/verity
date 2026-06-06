@@ -803,7 +803,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 14 — Supabase Realtime Setup
+#### ✅ Day 14 — Supabase Realtime Setup
 
 **Goal:** The frontend receives live workflow step updates without any SSE endpoint or polling.
 
@@ -845,9 +845,9 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 15 — Next.js Setup, Supabase Auth & OAuth
+#### ✅ Day 15 — Next.js Setup, Supabase Auth & OAuth
 
-**Goal:** Frontend runs. Email/password login works. Google and GitHub OAuth work.
+**Goal:** Frontend runs. Email/password login works. Google OAuth work.
 
 **Why this matters:** Supabase's `@supabase/ssr` package handles cookie-based sessions correctly for Next.js App Router. Getting this right on Day 15 means auth just works everywhere — server components, client components, and middleware.
 
@@ -902,12 +902,6 @@ Right now, the app can authenticate users, but they have nothing they can actual
      provider: 'google',
      options: { redirectTo: `${window.location.origin}/auth/callback` }
    })
-
-   // GitHub OAuth
-   await supabase.auth.signInWithOAuth({
-     provider: 'github',
-     options: { redirectTo: `${window.location.origin}/auth/callback` }
-   })
    ```
 9. Create `app/(auth)/signup/page.tsx` — same layout, calls `supabase.auth.signUp()`
 10. Create `app/auth/callback/route.ts` — the OAuth redirect handler:
@@ -928,7 +922,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
       return NextResponse.redirect(`${origin}/dashboard`)
     }
     ```
-    > This is the page Google/GitHub redirects to after the user approves login. It exchanges the code for a session and sends the user to the dashboard.
+    > This is the page Google redirects to after the user approves login. It exchanges the code for a session and sends the user to the dashboard.
 11. Create `middleware.ts` — protects all routes under `/dashboard` and `/sessions`:
     ```typescript
     // Redirect to /login if no valid session
@@ -936,11 +930,11 @@ Right now, the app can authenticate users, but they have nothing they can actual
     ```
 12. Add your Vercel preview URL to Supabase Dashboard → Authentication → URL Configuration → Redirect URLs
 
-✅ **Done when:** Email login works. Clicking "Login with Google" opens Google's consent screen and lands you on the dashboard. Same for GitHub.
+✅ **Done when:** Email login works. Clicking "Login with Google" opens Google's consent screen and lands you on the dashboard.
 
 ---
 
-#### Day 16 — Dashboard Page & Session Creation
+#### ✅ Day 16 — Dashboard Page & Session Creation
 
 **Goal:** Users see their sessions and can start new research.
 
@@ -964,7 +958,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 17 — Session Page & Live Progress Stepper
+#### ✅ Day 17 — Session Page & Live Progress Stepper
 
 **Goal:** The stepper lights up in real time as the workflow runs — no refresh needed.
 
@@ -1015,7 +1009,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 18 — Research Output: Questions, Sources & Report
+#### ✅ Day 18 — Research Output: Questions, Sources & Report
 
 **Goal:** The full research output is visible and beautifully rendered.
 
@@ -1047,7 +1041,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 19 — Chat Interface
+#### ✅ Day 19 — Chat Interface
 
 **Goal:** Users can ask questions in a real chat UI and get grounded answers.
 
@@ -1070,7 +1064,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 20 — Polish, Loading States & Empty States
+#### ✅ Day 20 — Polish, Loading States & Empty States
 
 **Goal:** The app feels complete and professional on all screen sizes.
 
@@ -1094,7 +1088,7 @@ Right now, the app can authenticate users, but they have nothing they can actual
 
 ---
 
-#### Day 21 — Deployment, README & Demo Prep
+#### ✅ Day 21 — Deployment, README & Demo Prep
 
 **Goal:** Project is live. GitHub is clean. You can demo it confidently.
 

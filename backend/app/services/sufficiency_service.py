@@ -1,19 +1,14 @@
 """Decides whether the gathered summaries are sufficient to write a full report."""
 
 from pydantic import BaseModel
-from langchain_mistralai import ChatMistralAI
 
-from app.core.config import settings
+from app.core.llm import llm
 
-llm = ChatMistralAI(
-    model="mistral-small-latest",
-    api_key=settings.MISTRAL_API_KEY,
-    max_retries=3,
-)
 
 class SufficiencyResult(BaseModel):
     enough: bool
     missing_areas: list[str]
+
 
 async def check_sufficiency(summaries: list[str], topic: str) -> SufficiencyResult:
     """Return whether summaries contain enough info to write a report on topic."""
