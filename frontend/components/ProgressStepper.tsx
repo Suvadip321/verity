@@ -26,23 +26,26 @@ export function ProgressStepper({ currentStep, status }: ProgressStepperProps) {
     : status === 'completed' ? STEPS.length : 0
 
   return (
-    <div className="flex flex-col space-y-6 max-w-xl mx-auto my-12 p-8 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg relative overflow-hidden">
+    <div className="flex flex-col space-y-6 max-w-xl mx-auto my-12 p-8 bg-[#050505] border border-white/[0.08] rounded-2xl shadow-2xl relative overflow-hidden">
       <h3 className="text-xl font-semibold text-zinc-100 mb-4 relative z-10">Research Progress</h3>
       
-      <div className="space-y-6 relative z-10">
-        {/* Vertical line connecting steps */}
-        <div className="absolute left-[15px] top-4 bottom-4 w-[2px] bg-zinc-800 -z-10"></div>
-        
+      <div className="space-y-6 relative z-10 flex flex-col">
         {STEPS.map((step, idx) => {
+          const isLast = idx === STEPS.length - 1
           const isPast = status === 'completed' || (currentIndex > idx)
           const isCurrent = status !== 'completed' && status !== 'failed' && currentIndex === idx
           const isFuture = status !== 'completed' && currentIndex < idx
           
           return (
-            <div key={step.key} className={`flex items-center gap-5 transition-all duration-500 ${isFuture ? 'opacity-40' : 'opacity-100'}`}>
+            <div key={step.key} className={`relative flex items-center gap-5 transition-all duration-500 ${isFuture ? 'opacity-40' : 'opacity-100'}`}>
+              
+              {/* Vertical line connecting to next step */}
+              {!isLast && (
+                <div className={`absolute left-[15px] top-8 w-[2px] h-6 -z-10 ${isPast && status !== 'failed' ? 'bg-emerald-500/30' : 'bg-white/[0.06]'}`}></div>
+              )}
               
               {/* Icon Container */}
-              <div className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center">
+              <div className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center bg-[#050505] rounded-full z-10">
                 {isPast && (
                   <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
                     <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,14 +63,14 @@ export function ProgressStepper({ currentStep, status }: ProgressStepperProps) {
                 )}
                 
                 {(status === 'failed' && currentIndex === idx) && (
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 border border-red-500 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-red-950 border border-red-500 flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-red-500"></div>
                   </div>
                 )}
                 
                 {isFuture && (
-                  <div className="w-8 h-8 rounded-full bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#050505] border-2 border-white/[0.06] flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-white/[0.06]"></div>
                   </div>
                 )}
               </div>

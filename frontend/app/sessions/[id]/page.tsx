@@ -172,7 +172,7 @@ export default function SessionPage() {
         {/* Single Floating Top-Left Back Button */}
         <Link 
           href="/dashboard" 
-          className="fixed top-[90px] left-4 lg:left-8 z-50 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 shadow-xl rounded-full px-4 py-2.5 flex items-center gap-2 transition-all font-medium text-sm group"
+          className="fixed top-[90px] left-4 lg:left-8 z-50 bg-[#050505] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.05] shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-full px-4 py-2.5 flex items-center gap-2 transition-all font-medium text-sm group"
         >
           <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -254,7 +254,7 @@ export default function SessionPage() {
                  </div>
                </h2>
                
-               <Button onClick={handleExport} variant="outline" className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors shadow-none text-zinc-100">
+               <Button onClick={handleExport} variant="outline" className="bg-[#050505] border-white/[0.08] hover:bg-white/[0.05] transition-all shadow-none text-zinc-100">
                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                  </svg>
@@ -262,7 +262,7 @@ export default function SessionPage() {
                </Button>
              </div>
 
-             <div className="bg-zinc-900 border border-zinc-800 rounded-md p-6">
+             <div className="mt-6">
                <ReportViewer markdown={session.report_markdown} />
              </div>
              

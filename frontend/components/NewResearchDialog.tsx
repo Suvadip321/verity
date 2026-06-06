@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 
 export function NewResearchDialog() {
   const [open, setOpen] = useState(false)
@@ -54,7 +55,8 @@ export function NewResearchDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-blue-600 text-white hover:bg-blue-700 font-medium px-6 shadow-none rounded-md transition-colors">
+        <Button className="bg-blue-900 text-white hover:bg-blue-800 font-semibold px-6 shadow-[0_0_15px_rgba(30,58,138,0.4)] border border-blue-700/50 rounded-lg transition-all">
+          <Plus className="w-4 h-4 mr-2" />
           New Research
         </Button>
       </DialogTrigger>
@@ -72,7 +74,7 @@ export function NewResearchDialog() {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. Impact of Quantum Computing on RSA Encryption"
-              className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-600 focus-visible:ring-offset-0 focus-visible:border-zinc-500 py-6 text-base"
+              className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:border-blue-500 focus-visible:shadow-[0_0_15px_rgba(59,130,246,0.3)] py-6 text-base rounded-xl transition-all"
               autoFocus
               autoComplete="off"
             />
@@ -81,7 +83,7 @@ export function NewResearchDialog() {
             <Button 
               type="submit" 
               disabled={loading || !topic.trim()} 
-              className="bg-blue-600 text-white hover:bg-blue-700 w-full sm:w-auto px-8 transition-colors rounded-md shadow-none"
+              className="bg-blue-900 text-white hover:bg-blue-800 font-semibold w-full sm:w-auto px-8 transition-all rounded-lg shadow-[0_0_15px_rgba(30,58,138,0.4)] border border-blue-700/50"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

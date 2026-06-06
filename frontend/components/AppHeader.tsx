@@ -31,8 +31,8 @@ export function AppHeader() {
   const initial = email ? email.charAt(0).toUpperCase() : 'U'
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950 px-6 py-4 flex items-center justify-between">
-      <Link href="/dashboard" className="text-2xl font-bold text-zinc-100 hover:text-white transition-colors tracking-tight flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-black/40 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+      <Link href="/dashboard" className="text-2xl font-serif font-bold bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity">
         <svg className="w-6 h-6 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22L2 7l5-5h10l5 5-10 15z" />
           <path d="M2 7h20" />
@@ -43,14 +43,14 @@ export function AppHeader() {
 
       <div className="flex items-center gap-4">
         {email && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-zinc-800 flex items-center justify-center text-zinc-300 text-sm font-medium border border-zinc-700">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-zinc-400 hidden sm:inline-block font-medium">{email}</span>
+            <div className="h-9 w-9 rounded-full bg-blue-900/20 flex items-center justify-center text-blue-400 text-sm font-bold border border-blue-500/20 shadow-inner">
               {initial}
             </div>
-            <span className="text-sm text-zinc-400 hidden sm:inline-block">{email}</span>
           </div>
         )}
-        <Button variant="outline" size="sm" onClick={handleLogout} className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors rounded-md px-4 shadow-none">
+        <Button variant="outline" size="sm" onClick={handleLogout} className="border-white/[0.08] bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all rounded-lg px-4 shadow-none ml-2">
           Logout
         </Button>
       </div>

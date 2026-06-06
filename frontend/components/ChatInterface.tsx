@@ -83,11 +83,13 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
   }
 
   const handleClearChat = async () => {
+    const backup = [...messages];
+    setMessages([])
     try {
       await api.delete(`/sessions/${sessionId}/chat`)
-      setMessages([])
       toast.success('Chat memory cleared')
     } catch (error) {
+      setMessages(backup)
       toast.error('Failed to clear chat')
     }
   }
@@ -95,10 +97,10 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
   if (loading) return null
 
   return (
-    <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col shadow-xl overflow-hidden mt-16 h-[600px] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">
+    <div className="relative bg-[#050505] border border-white/[0.06] rounded-2xl flex flex-col shadow-2xl overflow-hidden mt-16 h-[600px] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">
       {/* Slim Toolbar */}
       {messages.length > 0 && (
-        <div className="bg-zinc-950/40 px-4 py-2 border-b border-zinc-800/60 flex justify-end items-center">
+        <div className="bg-white/[0.02] px-4 py-2 border-b border-white/[0.06] flex justify-end items-center">
           <Button 
             onClick={handleClearChat} 
             variant="ghost" 
@@ -115,7 +117,7 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-6" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-4">
             <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mb-4 border border-zinc-700 shadow-inner">
@@ -133,8 +135,8 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
             <div key={msg.id} className={`flex group ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`relative max-w-[85%] md:max-w-[75%] rounded-2xl px-5 py-3.5 pb-8 shadow-sm ${
                 msg.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-br-none' 
-                  : 'bg-zinc-900 text-zinc-200 rounded-bl-none border border-zinc-800'
+                  ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] rounded-br-none' 
+                  : 'bg-white/[0.03] text-zinc-300 rounded-bl-none border border-white/[0.08] shadow-[0_0_20px_rgba(255,255,255,0.01)]'
               }`}>
                 {msg.role === 'user' ? (
                   <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{msg.content}</p>
@@ -207,23 +209,23 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
         )}
         {sending && (
           <div className="flex justify-start">
-            <div className="bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-2xl rounded-bl-none px-5 py-4 flex gap-1.5 items-center shadow-sm">
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
+            <div className="bg-white/[0.03] border border-white/[0.08] text-zinc-300 rounded-2xl rounded-bl-none px-5 py-4 flex gap-1.5 items-center shadow-sm">
+              <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce"></div>
             </div>
           </div>
         )}
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="p-4 md:p-5 bg-zinc-950 border-t border-zinc-800">
+      <form onSubmit={handleSend} className="p-4 md:p-5 bg-[#050505] border-t border-white/[0.06]">
         <div className="relative flex items-center">
           <Input 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="e.g. Can you summarize the second source?" 
-            className="w-full bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-blue-600 focus-visible:ring-1 focus-visible:ring-blue-600 py-6 pr-12 text-base shadow-inner"
+            className="w-full bg-white/[0.03] border-white/[0.08] text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:border-blue-500 focus-visible:shadow-[0_0_15px_rgba(59,130,246,0.3)] py-6 pr-12 text-base rounded-xl transition-all"
             disabled={sending}
             autoComplete="off"
           />
@@ -231,7 +233,7 @@ export function ChatInterface({ sessionId }: { sessionId: string }) {
             type="submit" 
             size="icon"
             disabled={sending || !input.trim()} 
-            className="absolute right-1.5 w-9 h-9 bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm rounded-md"
+            className="absolute right-1.5 w-9 h-9 bg-blue-900 hover:bg-blue-800 text-white transition-all shadow-[0_0_15px_rgba(30,58,138,0.4)] border border-blue-700/50 rounded-lg"
           >
             <svg className="w-4 h-4 translate-x-[-1px] translate-y-[1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />

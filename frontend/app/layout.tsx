@@ -23,7 +23,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 font-sans">
+      <body className="min-h-full flex flex-col bg-black text-zinc-100 font-sans">
         {children}
         <Toaster theme="dark" />
       </body>

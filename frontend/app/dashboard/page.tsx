@@ -91,7 +91,7 @@ export default function DashboardPage() {
                 placeholder="Search sessions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 text-sm rounded-md pl-9 pr-4 py-2 focus:outline-none focus:border-zinc-700 transition-colors"
+                className="w-full bg-[#050505] border border-white/[0.08] text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all"
               />
             </div>
             <NewResearchDialog />
@@ -102,33 +102,33 @@ export default function DashboardPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
-              <Card key={i} className="bg-zinc-900 border-zinc-800 rounded-md shadow-none h-40">
+              <Card key={i} className="bg-[#050505] border-white/[0.08] rounded-2xl shadow-none h-40">
                 <CardHeader className="pb-2">
-                  <Skeleton className="h-5 w-3/4 bg-zinc-800" />
+                  <Skeleton className="h-5 w-3/4 bg-white/[0.05]" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="h-4 w-1/4 bg-zinc-800" />
+                  <Skeleton className="h-4 w-1/4 bg-white/[0.05]" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 border border-dashed border-zinc-800 rounded-md bg-zinc-900/50">
+          <div className="flex flex-col items-center justify-center h-64 border border-dashed border-white/[0.1] rounded-2xl bg-[#050505]">
             <svg className="w-8 h-8 text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <p className="text-zinc-400 text-sm">No research sessions found.</p>
+            <p className="text-zinc-500 text-sm">No research sessions found.</p>
             <div className="mt-4"><NewResearchDialog /></div>
           </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="flex items-center justify-center h-32 border border-zinc-800 rounded-md bg-zinc-900/50">
-            <p className="text-zinc-500 text-sm">No sessions match your search.</p>
+          <div className="flex items-center justify-center h-32 border border-white/[0.1] rounded-2xl bg-[#050505]">
+            <p className="text-zinc-600 text-sm">No sessions match your search.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredSessions.map(session => (
               <Link key={session.id} href={`/sessions/${session.id}`} className="block group">
-                <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-all duration-300 rounded-md shadow-none h-full flex flex-col hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40">
+                <Card className="bg-[#050505] border border-white/[0.08] hover:border-blue-500/50 transition-all duration-300 rounded-2xl shadow-none h-full flex flex-col hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(30,58,138,0.2)]">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-medium text-zinc-100 line-clamp-2 leading-snug">
                       {session.topic}

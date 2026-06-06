@@ -12,7 +12,7 @@ export function SourceCard({ source }: { source: Source }) {
   }
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-all duration-300 flex flex-col h-full hover:shadow-md hover:-translate-y-1">
+    <Card className="bg-[#050505] border-white/[0.08] hover:border-blue-500/50 transition-all duration-300 flex flex-col h-full rounded-2xl hover:shadow-[0_0_30px_rgba(30,58,138,0.2)] hover:-translate-y-1">
       <CardHeader className="pb-3 flex-none">
         <div className="flex items-center gap-2 mb-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

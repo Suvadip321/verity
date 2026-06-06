@@ -25,15 +25,15 @@ export function ReportViewer({ markdown }: { markdown: string }) {
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 md:p-10 shadow-lg mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative group">
+    <div className="bg-[#050505] border border-white/[0.08] rounded-2xl p-6 md:p-10 shadow-2xl mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 relative group">
       
       {/* Copy Button */}
       <button 
         onClick={handleCopy}
         className={`absolute top-6 right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-md border transition-all text-xs font-medium shadow-sm z-10 ${
           copied 
-            ? 'border-zinc-600 bg-zinc-700 text-white opacity-100' 
-            : 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 hover:border-zinc-600 opacity-0 group-hover:opacity-100'
+            ? 'border-white/[0.1] bg-white/[0.1] text-white opacity-100' 
+            : 'border-white/[0.06] bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.05] hover:border-white/[0.1] opacity-0 group-hover:opacity-100'
         }`}
         title="Copy raw markdown"
       >
