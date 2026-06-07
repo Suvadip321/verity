@@ -5,7 +5,7 @@ Verity is an autonomous AI research agent that does the heavy lifting for you. I
 Built with a premium dark-mode aesthetic, it gives you a seamless, ultra-fast experience from login to the final report.
 
 ## Live Links
-- **Frontend (Live App)**: [verity-zeta-hazel.vercel.app](https://verity-zeta-hazel.vercel.app)
+- **Frontend (Live App)**: [verity-agent.vercel.app](https://verity-agent.vercel.app)
 - **Backend API**: [verity-backend-njrx.onrender.com](https://verity-backend-njrx.onrender.com)
 
 ## Features
