@@ -6,6 +6,7 @@ from langchain_mistralai import MistralAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.core.config import settings
+from app.core.llm import with_llm_retry
 
 embeddings_client = MistralAIEmbeddings(
     model="mistral-embed",
@@ -23,11 +24,13 @@ _splitter = RecursiveCharacterTextSplitter(
 )
 
 
+@with_llm_retry()
 async def embed_text(text: str) -> list[float]:
     """Return an embedding vector for a single text string."""
     return await embeddings_client.aembed_query(text)
 
 
+@with_llm_retry()
 async def embed_chunks(text: str) -> list[tuple[str, list[float]]]:
     """Split text into chunks and return (chunk, vector) pairs."""
     chunks = [c for c in _splitter.split_text(text) if c.strip()]
@@ -35,10 +38,14 @@ async def embed_chunks(text: str) -> list[tuple[str, list[float]]]:
         return []
 
     try:
+        batch_size = 20
         vectors = []
-        for chunk in chunks:
-            vectors.append(await embeddings_client.aembed_query(chunk))
-            await asyncio.sleep(_RATE_LIMIT_SLEEP)
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i + batch_size]
+            batch_vectors = await embeddings_client.aembed_documents(batch)
+            vectors.extend(batch_vectors)
+            if i + batch_size < len(chunks):
+                await asyncio.sleep(_RATE_LIMIT_SLEEP)
         return list(zip(chunks, vectors))
     except Exception as exc:
         print(f"[embedding_service] Failed to embed chunks: {exc}")

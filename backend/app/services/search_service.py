@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 
 from tavily import TavilyClient
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.core.config import settings
 
@@ -20,6 +21,11 @@ class SearchResult:
     question: str
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True,
+)
 async def _search_one(question: str, topic: str) -> list[SearchResult]:
     query = f"{question} {topic}"
     try:
@@ -32,7 +38,8 @@ async def _search_one(question: str, topic: str) -> list[SearchResult]:
         )
     except Exception as exc:
         print(f"[search_service] Tavily error for '{question}': {exc}")
-        return []
+
+        raise
 
     return [
         SearchResult(
@@ -49,6 +56,15 @@ async def _search_one(question: str, topic: str) -> list[SearchResult]:
 async def search_web(questions: list[str], topic: str) -> list[SearchResult]:
     """Search for each question concurrently and return a flat list of results."""
     results_per_question = await asyncio.gather(
-        *[_search_one(q, topic) for q in questions]
+        *[_search_one(q, topic) for q in questions],
+        return_exceptions=True
     )
-    return [result for sublist in results_per_question for result in sublist]
+    
+    valid_results = []
+    for result in results_per_question:
+        if isinstance(result, Exception):
+            print(f"[search_service] A search query failed completely: {result}")
+        else:
+            valid_results.extend(result)
+            
+    return valid_results

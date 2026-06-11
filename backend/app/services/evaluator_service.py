@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from app.core.llm import llm
+from app.core.llm import llm, with_llm_retry
 from app.services.search_service import SearchResult
 
 
@@ -34,6 +34,7 @@ class _ScoreList(BaseModel):
     scores: list[_SourceScore]
 
 
+@with_llm_retry()
 async def evaluate_sources(results: list[SearchResult], topic: str) -> list[ScoredSource]:
     """Score each search result with Mistral and return the top 5 by total score."""
     if not results:

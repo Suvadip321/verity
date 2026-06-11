@@ -75,7 +75,9 @@ async def run_workflow(session_id: int, topic: str) -> None:
         "search_results": [],
         "selected_sources": [],
         "extracted_sources": [],
+        "all_extracted_sources": [],
         "summaries": [],
+        "all_summaries": [],
         "enough_information": False,
         "missing_areas": [],
         "retry_count": 0,
@@ -93,9 +95,12 @@ async def run_workflow(session_id: int, topic: str) -> None:
         error = traceback.format_exc()
         print(f"[workflow] Session {session_id} failed:\n{error}")
         async with async_session() as db:
-            await db.execute(
-                update(ResearchSession)
-                .where(ResearchSession.id == session_id)
-                .values(status="failed", error_message=error[:2000])
-            )
-            await db.commit()
+            try:
+                await db.execute(
+                    update(ResearchSession)
+                    .where(ResearchSession.id == session_id)
+                    .values(status="failed", error_message=error[:2000])
+                )
+                await db.commit()
+            except Exception as update_exc:
+                print(f"[workflow] CRITICAL: Failed to update session {session_id} to 'failed' status. DB Error: {update_exc}")

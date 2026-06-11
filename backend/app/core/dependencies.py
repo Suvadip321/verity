@@ -12,7 +12,7 @@ security = HTTPBearer()
 import asyncio
 import time
 
-# Cache up to 1000 tokens for 5 minutes (300 seconds)
+
 token_cache = {}
 CACHE_TTL = 300
 
@@ -25,7 +25,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if now - timestamp < CACHE_TTL:
             return user
         else:
-            del token_cache[token]
+            token_cache.pop(token, None)
 
     try:
         response = await asyncio.to_thread(supabase.auth.get_user, token)
@@ -35,7 +35,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 detail="Invalid or expired token",
             )
         
-        # Keep cache from growing infinitely
+
         if len(token_cache) > 1000:
             token_cache.clear()
             

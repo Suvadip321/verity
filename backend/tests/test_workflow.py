@@ -15,9 +15,9 @@ load_dotenv()
 
 TOPIC = "benefits of watching sports"
 
-# Set to True to create a new session automatically, or manually set SESSION_ID
+
 CREATE_SESSION = True
-SESSION_ID = None       # ignored when CREATE_SESSION = True
+SESSION_ID = None
 
 USER_ID = "f3639163-4010-48ff-9b1a-a27931fc763e"
 
@@ -25,7 +25,7 @@ USER_ID = "f3639163-4010-48ff-9b1a-a27931fc763e"
 
 async def main():
     from app.database.connection import async_session
-    import app.models  # ensures all models are registered in SQLAlchemy's mapper
+    import app.models
     from app.models.session import ResearchSession
     from sqlalchemy.future import select
 

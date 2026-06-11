@@ -3,25 +3,27 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.core.llm import llm
+from app.core.llm import llm, with_llm_retry
 from app.models.chat import ChatMessage
 from app.models.session import ResearchSession
 from app.services.retrieval_service import retrieve_chunks
 
-_MAX_REPORT_CHARS = 8_000
 _MAX_HISTORY_MESSAGES = 6
 
 
+@with_llm_retry()
 async def chat(question: str, session_id: int, db: AsyncSession) -> str:
     result = await db.execute(select(ResearchSession).where(ResearchSession.id == session_id))
     session = result.scalar_one_or_none()
-    report_text = (
-        (session.report_markdown or "")[:_MAX_REPORT_CHARS]
-        if session
-        else "No report generated yet."
-    )
+    
+    if not session:
+        raise ValueError(f"ResearchSession {session_id} not found")
+        
+    report_text = session.report_markdown if session.report_markdown else "No report generated yet."
 
-    chunks = await retrieve_chunks(question, session_id, db)
+
+    search_query = f"{session.topic} - {question}"
+    chunks = await retrieve_chunks(search_query, session_id, db)
     context = "\n\n".join(chunks) if chunks else "No raw research chunks available."
 
     past_messages = await get_messages(session_id, db)
@@ -30,10 +32,17 @@ async def chat(question: str, session_id: int, db: AsyncSession) -> str:
     ) or "No previous conversation."
 
     prompt = (
-        f"Answer ONLY using the context below. Do not use outside knowledge.\n\n"
-        f"--- Final Research Report ---\n{report_text}\n\n"
-        f"--- Raw Source Context ---\n{context}\n\n"
+        f"You are a helpful and highly accurate research assistant.\n"
+        f"Your job is to answer the User Question based on the provided Final Research Report and Raw Source Context.\n\n"
+        f"CRITICAL RULES:\n"
+        f"1. Answer the question using ONLY the facts provided in the Final Research Report and Raw Source Context below. You may synthesize and combine information from multiple sections.\n"
+        f"2. DO NOT hallucinate, guess, or bring in any outside knowledge.\n"
+        f"3. If the provided report and context do not contain enough information to answer the question, simply reply: 'I'm sorry, that information was not found in my research.'\n"
+        f"4. DO NOT include any source citations or reference numbers (e.g. [1], [2]) in your response. Provide a clean, naturally flowing answer without brackets.\n\n"
+        f"--- Research Topic ---\n{session.topic}\n\n"
         f"--- Recent Conversation History ---\n{history_text}\n\n"
+        f"--- Raw Source Context ---\n{context}\n\n"
+        f"--- Final Research Report ---\n{report_text}\n\n"
         f"User Question: {question}"
     )
 

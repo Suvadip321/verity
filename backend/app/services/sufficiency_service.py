@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from app.core.llm import llm
+from app.core.llm import llm, with_llm_retry
 
 
 class SufficiencyResult(BaseModel):
@@ -10,6 +10,7 @@ class SufficiencyResult(BaseModel):
     missing_areas: list[str]
 
 
+@with_llm_retry()
 async def check_sufficiency(summaries: list[str], topic: str) -> SufficiencyResult:
     """Return whether summaries contain enough info to write a report on topic."""
     combined = "\n\n---\n\n".join(summaries)
@@ -28,5 +29,5 @@ async def check_sufficiency(summaries: list[str], topic: str) -> SufficiencyResu
         return response
     except Exception as exc:
         print(f"[sufficiency_service] Mistral structured output failed: {exc}")
-        # Default to enough=True to prevent infinite retry loops
+
         return SufficiencyResult(enough=True, missing_areas=[])

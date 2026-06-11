@@ -12,7 +12,7 @@ export function SourceCard({ source }: { source: Source }) {
   }
 
   return (
-    <Card className="bg-[#050505] border-white/[0.08] hover:border-blue-500/50 transition-all duration-300 flex flex-col h-full rounded-2xl hover:shadow-[0_0_30px_rgba(30,58,138,0.2)] hover:-translate-y-1">
+    <Card className="bg-white/[0.02] backdrop-blur-md border-white/[0.05] hover:border-white/[0.1] hover:bg-white/[0.03] transition-all duration-300 flex flex-col h-full rounded-2xl hover:-translate-y-1">
       <CardHeader className="pb-3 flex-none">
         <div className="flex items-center gap-2 mb-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@ export function SourceCard({ source }: { source: Source }) {
           {domain}
         </div>
         <CardTitle className="text-base font-semibold leading-snug line-clamp-2">
-          <a href={source.source_url} target="_blank" rel="noopener noreferrer" className="text-zinc-200 hover:text-blue-400 transition-colors">
+          <a href={source.source_url} target="_blank" rel="noopener noreferrer" className="text-zinc-200 hover:text-zinc-100 transition-colors">
             {source.title || source.source_url}
           </a>
         </CardTitle>

@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_current_user
@@ -10,10 +12,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/signup")
 async def signup(request: SignupRequest):
     try:
-        response = supabase.auth.sign_up({
-            "email": request.email,
-            "password": request.password,
-        })
+        response = await asyncio.to_thread(
+            supabase.auth.sign_up,
+            {
+                "email": request.email,
+                "password": request.password,
+            }
+        )
         if response.user is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -29,10 +34,13 @@ async def signup(request: SignupRequest):
 @router.post("/login", response_model=TokenResponse)
 async def login(request: LoginRequest):
     try:
-        response = supabase.auth.sign_in_with_password({
-            "email": request.email,
-            "password": request.password,
-        })
+        response = await asyncio.to_thread(
+            supabase.auth.sign_in_with_password,
+            {
+                "email": request.email,
+                "password": request.password,
+            }
+        )
         return TokenResponse(
             access_token=response.session.access_token,
             token_type="bearer",

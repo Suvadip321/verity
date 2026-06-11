@@ -6,7 +6,7 @@ Built with a premium dark-mode aesthetic, it gives you a seamless, ultra-fast ex
 
 ## Live Links
 - **Frontend (Live App)**: [verity-agent.vercel.app](https://verity-agent.vercel.app)
-- **Backend API**: [verity-backend-njrx.onrender.com](https://verity-backend-njrx.onrender.com)
+- **Backend API**: [verity-backend-njrr.onrender.com](https://verity-backend-njrr.onrender.com)
 
 ## Features
 - **Autonomous Research**: Uses LangGraph to plan, search, evaluate, and extract information on its own.

@@ -31,26 +31,21 @@ export function AppHeader() {
   const initial = email ? email.charAt(0).toUpperCase() : 'U'
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-black/40 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
-      <Link href="/dashboard" className="text-2xl font-serif font-bold bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <svg className="w-6 h-6 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22L2 7l5-5h10l5 5-10 15z" />
-          <path d="M2 7h20" />
-          <path d="M7 2l5 20 5-20" />
-        </svg>
+    <header className="sticky top-0 z-[70] border-b border-white/[0.04] bg-[#080810]/70 backdrop-blur-2xl px-6 py-4 flex items-center justify-between">
+      <Link href="/dashboard" className="text-2xl font-sans font-bold bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent tracking-tighter hover:opacity-80 transition-all">
         Verity
       </Link>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         {email && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-zinc-400 hidden sm:inline-block font-medium">{email}</span>
-            <div className="h-9 w-9 rounded-full bg-blue-900/20 flex items-center justify-center text-blue-400 text-sm font-bold border border-blue-500/20 shadow-inner">
+          <div className="flex items-center gap-4">
+            <span className="text-[13px] text-white/40 hidden sm:inline-block font-medium">{email}</span>
+            <div className="h-8 w-8 rounded-full bg-[#0f0f1a] flex items-center justify-center text-white text-[11px] font-medium outline outline-2 outline-[#3b6ef5] outline-offset-2 border-none">
               {initial}
             </div>
           </div>
         )}
-        <Button variant="outline" size="sm" onClick={handleLogout} className="border-white/[0.08] bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all rounded-lg px-4 shadow-none ml-2">
+        <Button variant="outline" size="sm" onClick={handleLogout} className="border-[0.5px] border-white/[0.1] bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.08] transition-all rounded-[6px] px-[12px] py-[5px] text-xs font-medium ml-2 h-auto shadow-none">
           Logout
         </Button>
       </div>

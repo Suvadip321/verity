@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.core.llm import llm
+from app.core.llm import llm, with_llm_retry
 
 
 class _ResearchQuestions(BaseModel):
@@ -16,6 +16,7 @@ Each question must end with a question mark and be self-contained.
 """
 
 
+@with_llm_retry()
 async def generate_questions(topic: str) -> list[str]:
     """Return exactly 3 research questions for the given topic."""
     prompt = (

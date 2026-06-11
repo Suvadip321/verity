@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import async_session
 from app.graph.state import ResearchState
-from app.models.chat import DocumentChunk
+from app.models.chat import DocumentChunk, ChatMessage
 from app.models.session import ResearchQuestion, ResearchSession, ResearchSource
 from app.services.embedding_service import embed_chunks
 from app.services.evaluator_service import evaluate_sources
@@ -33,6 +33,13 @@ async def _update_status(session_id: int, status: str, current_step: str, db: As
 async def planner_node(state: ResearchState) -> ResearchState:
     async with async_session() as db:
         await _update_status(state["session_id"], "planning", "planning", db)
+        
+        from sqlalchemy import delete
+        await db.execute(delete(ResearchQuestion).where(ResearchQuestion.session_id == state["session_id"]))
+        await db.execute(delete(ResearchSource).where(ResearchSource.session_id == state["session_id"]))
+        await db.execute(delete(DocumentChunk).where(DocumentChunk.session_id == state["session_id"]))
+        await db.execute(delete(ChatMessage).where(ChatMessage.session_id == state["session_id"]))
+        await db.commit()
 
     questions = await generate_questions(state["topic"])
 
@@ -48,7 +55,6 @@ async def search_node(state: ResearchState) -> ResearchState:
     async with async_session() as db:
         await _update_status(state["session_id"], "searching", "searching", db)
 
-    # On a retry, search for missing areas instead of the original questions.
     if state["retry_count"] > 0 and state["missing_areas"]:
         queries = state["missing_areas"][:3]
         results = await search_web(queries, state["topic"])
@@ -56,7 +62,7 @@ async def search_node(state: ResearchState) -> ResearchState:
         results = await search_web(state["questions"], state["topic"])
 
     search_dicts = [asdict(r) for r in results]
-    return {**state, "search_results": state["search_results"] + search_dicts}
+    return {**state, "search_results": search_dicts}
 
 
 async def evaluator_node(state: ResearchState) -> ResearchState:
@@ -81,7 +87,11 @@ async def extraction_node(state: ResearchState) -> ResearchState:
         {**source, "extracted_text": text}
         for source, text in zip(sources, texts)
     ]
-    return {**state, "extracted_sources": extracted}
+    return {
+        **state, 
+        "extracted_sources": extracted,
+        "all_extracted_sources": state.get("all_extracted_sources", []) + extracted
+    }
 
 
 async def summarization_node(state: ResearchState) -> ResearchState:
@@ -92,32 +102,45 @@ async def summarization_node(state: ResearchState) -> ResearchState:
     new_sources = []
     for source in state["extracted_sources"]:
         text = source.get("extracted_text", "")
-        summary = await summarise_text(text, state["topic"]) if text else ""
+        if text:
+            summary = await summarise_text(text, state["topic"])
+            await asyncio.sleep(1.0)
+            
+            if "no relevant information" in summary.lower():
+                summary = ""
+                
+            if summary:
+                new_sources.append(ResearchSource(
+                    session_id=state["session_id"],
+                    title=source["title"],
+                    source_url=source["url"],
+                    relevance_score=source["relevance_score"],
+                    credibility_score=source["credibility_score"],
+                    usefulness_score=source["usefulness_score"],
+                    summary=summary,
+                ))
+        else:
+            summary = ""
+            
         summaries.append(summary)
-
-        new_sources.append(ResearchSource(
-            session_id=state["session_id"],
-            title=source["title"],
-            source_url=source["url"],
-            relevance_score=source["relevance_score"],
-            credibility_score=source["credibility_score"],
-            usefulness_score=source["usefulness_score"],
-            summary=summary,
-        ))
 
     async with async_session() as db:
         for source_obj in new_sources:
             db.add(source_obj)
         await db.commit()
 
-    return {**state, "summaries": summaries}
+    return {
+        **state, 
+        "summaries": summaries,
+        "all_summaries": state.get("all_summaries", []) + summaries
+    }
 
 
 async def sufficiency_node(state: ResearchState) -> ResearchState:
     async with async_session() as db:
         await _update_status(state["session_id"], "checking_sufficiency", "checking_sufficiency", db)
 
-    non_empty = [s for s in state["summaries"] if s]
+    non_empty = [s for s in state.get("all_summaries", []) if s]
     result = await check_sufficiency(non_empty, state["topic"])
 
     return {
@@ -133,10 +156,17 @@ async def embedding_node(state: ResearchState) -> ResearchState:
         await _update_status(state["session_id"], "embedding", "embedding", db)
 
     source_chunks: list[tuple[str, list[float]]] = []
-    for source in state["extracted_sources"]:
+    all_extracted = state.get("all_extracted_sources", [])
+    all_summaries = state.get("all_summaries", [])
+    
+    for source, summary in zip(all_extracted, all_summaries):
+        if not summary:
+            continue
+            
         text = source.get("extracted_text", "")
         if not text:
             continue
+            
         chunks = await embed_chunks(text)
         source_chunks.extend(chunks)
 
@@ -156,8 +186,18 @@ async def report_node(state: ResearchState) -> ResearchState:
     async with async_session() as db:
         await _update_status(state["session_id"], "generating_report", "generating_report", db)
 
-    non_empty = [s for s in state["summaries"] if s]
-    report = await generate_report(state["topic"], state["questions"], non_empty)
+    all_extracted = state.get("all_extracted_sources", [])
+    all_summaries = state.get("all_summaries", [])
+    
+    source_data = []
+    for source, summary in zip(all_extracted, all_summaries):
+        if summary:
+            source_data.append({
+                "title": source.get("title", "Unknown Source"),
+                "summary": summary
+            })
+
+    report = await generate_report(state["topic"], state["questions"], source_data)
 
     async with async_session() as db:
         await db.execute(

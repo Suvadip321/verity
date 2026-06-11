@@ -15,10 +15,9 @@ from app.api.sessions import router as sessions_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+
     yield
-    # Shutdown: gracefully close all DB connections so we don't leave zombies
-    # on Supabase's pooler during Uvicorn reloads.
+
     await engine.dispose()
 
 

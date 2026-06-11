@@ -43,7 +43,7 @@ async def create_session(
     db.add(new_session)
     await db.commit()
     await db.refresh(new_session)
-    # Load relationships needed by SessionResponse
+
     await db.refresh(new_session, attribute_names=["questions", "sources"])
     return new_session
 
@@ -114,6 +114,10 @@ async def run_session(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Session is already '{session.status}'. Only pending or failed sessions can be run.",
         )
+
+
+    session.status = "starting"
+    await db.commit()
 
     from app.graph.workflow import run_workflow
     background_tasks.add_task(run_workflow, session_id, session.topic)

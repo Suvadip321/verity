@@ -63,7 +63,7 @@ async def test_extraction(scored: list) -> list[str]:
     from app.services.extraction_service import extract_text
 
     texts: list[str] = []
-    for source in scored[:2]:  # only test first 2 to save time
+    for source in scored[:2]:
         text = await extract_text(source.url)
         status = f"{len(text)} chars" if text else "skipped (empty/failed)"
         print(f"  {source.url[:55]} → {status}")
@@ -108,12 +108,12 @@ async def test_embedding(texts: list[str]) -> None:
     print("\nEmbedding Service")
     from app.services.embedding_service import embed_text, embed_chunks
 
-    # Test single embedding
+
     vector = await embed_text("AI is transforming healthcare.")
     assert len(vector) == 1024, f"Expected 1024 dims, got {len(vector)}"
     ok(f"embed_text returned a vector of {len(vector)} floats")
 
-    # Test chunking + embedding on real extracted text
+
     sample_text = next((t for t in texts if len(t) > 200), None)
     if sample_text:
         chunks = await embed_chunks(sample_text)

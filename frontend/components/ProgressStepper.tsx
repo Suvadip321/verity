@@ -25,65 +25,57 @@ export function ProgressStepper({ currentStep, status }: ProgressStepperProps) {
     ? STEPS.findIndex(s => s.key === currentStep)
     : status === 'completed' ? STEPS.length : 0
 
+  const progressPercentage = Math.min(100, Math.max(0, (currentIndex / (STEPS.length - 1)) * 100));
+
   return (
-    <div className="flex flex-col space-y-6 max-w-xl mx-auto my-12 p-8 bg-[#050505] border border-white/[0.08] rounded-2xl shadow-2xl relative overflow-hidden">
-      <h3 className="text-xl font-semibold text-zinc-100 mb-4 relative z-10">Research Progress</h3>
-      
-      <div className="space-y-6 relative z-10 flex flex-col">
-        {STEPS.map((step, idx) => {
-          const isLast = idx === STEPS.length - 1
-          const isPast = status === 'completed' || (currentIndex > idx)
-          const isCurrent = status !== 'completed' && status !== 'failed' && currentIndex === idx
-          const isFuture = status !== 'completed' && currentIndex < idx
-          
-          return (
-            <div key={step.key} className={`relative flex items-center gap-5 transition-all duration-500 ${isFuture ? 'opacity-40' : 'opacity-100'}`}>
-              
-              {/* Vertical line connecting to next step */}
-              {!isLast && (
-                <div className={`absolute left-[15px] top-8 w-[2px] h-6 -z-10 ${isPast && status !== 'failed' ? 'bg-emerald-500/30' : 'bg-white/[0.06]'}`}></div>
-              )}
-              
-              {/* Icon Container */}
-              <div className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center bg-[#050505] rounded-full z-10">
-                {isPast && (
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                    <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-                
-                {isCurrent && (
-                  <div className="relative flex items-center justify-center w-8 h-8">
-                    <div className="absolute inset-0 rounded-full border-2 border-zinc-700"></div>
-                    <div className="absolute inset-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  </div>
-                )}
-                
-                {(status === 'failed' && currentIndex === idx) && (
-                  <div className="w-8 h-8 rounded-full bg-red-950 border border-red-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  </div>
-                )}
-                
-                {isFuture && (
-                  <div className="w-8 h-8 rounded-full bg-[#050505] border-2 border-white/[0.06] flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-white/[0.06]"></div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1">
-                <span className={`text-base font-medium transition-colors duration-300 ${isCurrent ? 'text-blue-400' : isPast ? 'text-zinc-200' : 'text-zinc-500'}`}>
-                  {step.label}
-                </span>
-              </div>
-            </div>
-          )
-        })}
+    <div className="flex justify-center w-full my-8">
+      <div className="inline-flex items-center gap-4 px-5 py-2.5 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-full shadow-lg">
+        
+        {/* Status Icon */}
+        <div className="flex-shrink-0 w-4 h-4 flex items-center justify-center">
+           {status === 'completed' ? (
+             <svg className="w-4 h-4 text-emerald-500 animate-in zoom-in duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+             </svg>
+           ) : status === 'failed' ? (
+             <svg className="w-4 h-4 text-red-500 animate-in zoom-in duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+             </svg>
+           ) : (
+             <div className="w-3.5 h-3.5 border-[2px] border-white/20 border-t-white/90 rounded-full animate-spin" />
+           )}
+        </div>
+
+        {/* Dynamic Text Area */}
+        <div className="h-5 relative w-64 flex items-center overflow-hidden">
+          {STEPS.map((step, idx) => {
+            const isActive = idx === currentIndex && status !== 'completed' && status !== 'failed';
+            const isDone = status === 'completed' && idx === STEPS.length - 1;
+            const isFailed = status === 'failed' && idx === currentIndex;
+            
+            if (!isActive && !isDone && !isFailed) return null;
+
+            return (
+              <span 
+                key={step.key}
+                className="absolute inset-0 flex items-center text-[13px] font-sans font-medium text-white/80 tracking-wide animate-in slide-in-from-bottom-2 fade-in duration-500 whitespace-nowrap"
+              >
+                {status === 'completed' ? 'Research Complete' : status === 'failed' ? 'Research Failed' : step.label + '...'}
+              </span>
+            )
+          })}
+        </div>
+
+        {/* Mini Progress Bar */}
+        <div className="pl-4 border-l border-white/10 flex items-center">
+          <div className="w-16 h-1 bg-white/[0.05] rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white/40 transition-all duration-1000 ease-out rounded-full"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   )
