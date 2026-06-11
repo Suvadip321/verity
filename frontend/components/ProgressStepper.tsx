@@ -67,7 +67,7 @@ export function ProgressStepper({ currentStep, status }: ProgressStepperProps) {
         </div>
 
         {/* Mini Progress Bar */}
-        <div className="pl-4 border-l border-white/10 flex items-center">
+        <div className="pl-4 flex items-center">
           <div className="w-16 h-1 bg-white/[0.05] rounded-full overflow-hidden">
             <div 
               className="h-full bg-white/40 transition-all duration-1000 ease-out rounded-full"
