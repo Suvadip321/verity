@@ -8,7 +8,7 @@ report_llm = ChatMistralAI(
     model="mistral-small-latest",
     api_key=settings.MISTRAL_API_KEY,
     max_retries=3,
-    temperature=0.2,
+    temperature=0.0,
 )
 
 @with_llm_retry()

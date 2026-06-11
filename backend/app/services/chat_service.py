@@ -1,5 +1,7 @@
 """Handles RAG-based chat: retrieves context, calls Mistral, saves messages."""
 
+import asyncio
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -10,6 +12,8 @@ from app.services.retrieval_service import retrieve_chunks
 
 _MAX_HISTORY_MESSAGES = 6
 
+class _QueryList(BaseModel):
+    queries: list[str]
 
 @with_llm_retry()
 async def chat(question: str, session_id: int, db: AsyncSession) -> str:
@@ -20,16 +24,32 @@ async def chat(question: str, session_id: int, db: AsyncSession) -> str:
         raise ValueError(f"ResearchSession {session_id} not found")
         
     report_text = session.report_markdown if session.report_markdown else "No report generated yet."
-
-
-    search_query = f"{session.topic} - {question}"
-    chunks = await retrieve_chunks(search_query, session_id, db)
-    context = "\n\n".join(chunks) if chunks else "No raw research chunks available."
-
     past_messages = await get_messages(session_id, db)
     history_text = "\n".join(
         f"{m.role}: {m.content}" for m in past_messages[-_MAX_HISTORY_MESSAGES:]
     ) or "No previous conversation."
+
+    expansion_prompt = (
+        f"Topic: {session.topic}\n"
+        f"Final Research Report: {report_text}\n"
+        f"Conversation History: {history_text}\n"
+        f"User Question: {question}\n\n"
+        f"Generate exactly 3 highly specific search queries to find the answer to the User Question in a vector database."
+    )
+    
+    try:
+        structured_llm = llm.with_structured_output(_QueryList)
+        expansion_response = await structured_llm.ainvoke(expansion_prompt)
+        queries = expansion_response.queries
+    except Exception as e:
+        print(f"[chat_service] Query expansion failed: {e}")
+        queries = [f"{session.topic} - {question}"]
+
+    tasks = [retrieve_chunks(q, session_id, db) for q in queries]
+    all_results = await asyncio.gather(*tasks)
+    
+    unique_chunks = list(set(chunk for result in all_results for chunk in result))
+    context = "\n\n".join(unique_chunks) if unique_chunks else "No raw research chunks available."
 
     prompt = (
         f"You are a helpful and highly accurate research assistant.\n"
